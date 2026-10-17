@@ -1,91 +1,174 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="h-full bg-slate-950 text-slate-100 select-none">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Pallet Studio (Original Stable)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>3D Pallet Studio Mobile</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- Three.js & OrbitControls -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js and OrbitControls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { fontFamily: { sans: ['Kanit', 'sans-serif'] } }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; overflow: hidden; }
-        #canvas-container { width: 100vw; height: 100vh; display: block; }
+        #canvas-container canvas { outline: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+        button, input, select { touch-action: manipulation; }
     </style>
 </head>
-<body>
+<body class="h-full flex flex-col font-sans bg-slate-950 text-slate-100 overflow-hidden">
 
-    <!-- Top Floating Bar -->
-    <div class="absolute top-3 left-3 right-3 flex justify-between items-center z-10 pointer-events-none">
-        <div class="bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl shadow-lg pointer-events-auto flex items-center gap-2">
-            <i class="fa-solid fa-cube text-sky-400"></i>
-            <span class="font-bold text-xs text-white">Pallet3D Studio</span>
+    <!-- Top Compact Header -->
+    <header class="h-12 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center space-x-2">
+            <div class="bg-sky-600 p-1.5 rounded-lg text-white">
+                <i class="fa-solid fa-boxes-packing text-sm"></i>
+            </div>
+            <h1 class="font-bold text-sm text-white">Pallet3D <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded-full">STABLE</span></h1>
         </div>
-        <button onclick="app.addNewPallet()" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg pointer-events-auto flex items-center gap-1 active:scale-95 transition-all">
-            <i class="fa-solid fa-plus"></i> เพิ่มพาเลท
+
+        <div class="flex items-center space-x-1.5">
+            <button id="btn-back-overview" onclick="app.viewAllOverview()" class="hidden bg-slate-800 text-sky-400 px-2 py-1 rounded-lg text-xs font-medium">
+                <i class="fa-solid fa-globe"></i> ภาพรวม
+            </button>
+            <button onclick="app.addNewPallet()" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-xs font-medium shadow">
+                <i class="fa-solid fa-plus"></i> เพิ่มพาเลท
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Body Area -->
+    <div class="flex-1 flex flex-col relative overflow-hidden">
+        <!-- 3D Viewport -->
+        <main id="view-3d" class="flex-1 relative bg-slate-950 w-full h-full">
+            <div id="canvas-container" class="w-full h-full"></div>
+
+            <div class="absolute top-2 left-2 right-2 pointer-events-none z-10 flex justify-center">
+                <div class="bg-slate-900/90 border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-300">
+                    <span id="view-mode-indicator" class="font-bold text-sky-400">ภาพรวมพาเลท (แตะพาเลทเพื่อส่อง)</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Control Sheet Panel -->
+        <div id="panel-content" class="hidden flex-1 bg-slate-900 overflow-y-auto custom-scrollbar p-3 space-y-3">
+            <div id="tab-pallets" class="space-y-3">
+                <div id="pallet-list-container" class="space-y-2"></div>
+            </div>
+
+            <div id="tab-inspector" class="hidden space-y-3">
+                <div class="p-2.5 bg-sky-950/50 border border-sky-800/60 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-sky-300" id="insp-pallet-title">พาเลท</span>
+                        <span id="insp-pallet-status" class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded-full">0 กล่อง</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+                        <div>
+                            <label class="text-[10px] text-slate-400">ยาว (mm)</label>
+                            <input type="number" id="active-pallet-l" onchange="app.updateActivePalletSpec()" class="w-full bg-slate-800 rounded px-1.5 py-1 text-sky-400">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400">กว้าง (mm)</label>
+                            <input type="number" id="active-pallet-w" onchange="app.updateActivePalletSpec()" class="w-full bg-slate-800 rounded px-1.5 py-1 text-sky-400">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400">สูง (mm)</label>
+                            <input type="number" id="active-pallet-h" onchange="app.updateActivePalletSpec()" class="w-full bg-slate-800 rounded px-1.5 py-1 text-sky-400">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                    <div class="text-xs font-bold text-slate-200">เพิ่มลังแฟ้มลงพาเลท</div>
+                    <input type="text" id="new-box-name" placeholder="ชื่อลัง เช่น เอกสารบัญชี" class="w-full bg-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <input type="number" id="new-box-l" value="400" placeholder="ยาว" class="bg-slate-800 rounded px-1.5 py-1 text-xs">
+                        <input type="number" id="new-box-w" value="300" placeholder="กว้าง" class="bg-slate-800 rounded px-1.5 py-1 text-xs">
+                        <input type="number" id="new-box-h" value="250" placeholder="สูง" class="bg-slate-800 rounded px-1.5 py-1 text-xs">
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" id="new-box-qty" value="8" placeholder="จำนวน" class="bg-slate-800 rounded px-1.5 py-1 text-xs">
+                        <input type="color" id="new-box-color" value="#0284c7" class="w-full h-7 bg-slate-800 rounded cursor-pointer p-0.5">
+                    </div>
+                    <button onclick="app.addBoxToActivePallet()" class="w-full bg-sky-600 text-white py-2 rounded-lg text-xs font-bold">+ เพิ่มกล่อง</button>
+                </div>
+
+                <div id="active-pallet-box-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="h-14 bg-slate-900 border-t border-slate-800 grid grid-cols-3 shrink-0 z-30">
+        <button onclick="app.switchMobileTab('3d')" id="nav-btn-3d" class="flex flex-col items-center justify-center text-sky-400">
+            <i class="fa-solid fa-cube text-base"></i>
+            <span class="text-[10px] mt-0.5">ฉาก 3D</span>
         </button>
-    </div>
-
-    <!-- 3D Canvas Viewport -->
-    <div id="canvas-container"></div>
-
-    <!-- Bottom Controls / Pallet List Sheet -->
-    <div class="absolute bottom-3 left-3 right-3 bg-slate-900/95 border border-slate-800 p-3 rounded-2xl shadow-2xl backdrop-blur z-10 max-h-[40vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-bold text-slate-300"><i class="fa-solid fa-pallet text-sky-400"></i> รายการพาเลททั้งหมด</span>
-            <span id="total-pallets" class="text-[10px] bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded-full font-mono">0 พาเลท</span>
-        </div>
-        <div id="pallet-list" class="space-y-2"></div>
-    </div>
+        <button onclick="app.switchMobileTab('pallets')" id="nav-btn-pallets" class="flex flex-col items-center justify-center text-slate-400">
+            <i class="fa-solid fa-pallet text-base"></i>
+            <span class="text-[10px] mt-0.5">พาเลท</span>
+        </button>
+        <button onclick="app.switchMobileTab('inspector')" id="nav-btn-inspector" class="flex flex-col items-center justify-center text-slate-400">
+            <i class="fa-solid fa-box text-base"></i>
+            <span class="text-[10px] mt-0.5">จัดการกล่อง</span>
+        </button>
+    </nav>
 
     <script>
-        class OriginalPalletApp {
+        class SimplePalletApp {
             constructor() {
                 this.pallets = [];
+                this.selectedPalletId = null;
                 this.scene = null;
                 this.camera = null;
                 this.renderer = null;
                 this.controls = null;
                 this.palletMeshes = [];
                 this.boxMeshes = [];
+                this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2();
 
                 this.init3D();
-                this.loadDefaultData();
+                this.initEvents();
+                this.loadData();
             }
 
             init3D() {
                 const container = document.getElementById('canvas-container');
-
                 this.scene = new THREE.Scene();
                 this.scene.background = new THREE.Color(0x020617);
 
-                this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 20000);
+                this.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 10000);
                 this.camera.position.set(2000, 2500, 3000);
 
                 this.renderer = new THREE.WebGLRenderer({ antialias: true });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setSize(container.clientWidth, container.clientHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                 container.appendChild(this.renderer.domElement);
 
                 this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
                 this.controls.enableDamping = true;
 
-                // Lights
-                const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.9);
                 this.scene.add(ambient);
 
                 const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
                 dirLight.position.set(1000, 3000, 1000);
                 this.scene.add(dirLight);
 
-                // Grid
-                const grid = new THREE.GridHelper(10000, 40, 0x334155, 0x1e293b);
+                const grid = new THREE.GridHelper(8000, 30, 0x334155, 0x1e293b);
                 grid.position.y = -5;
                 this.scene.add(grid);
 
@@ -97,14 +180,33 @@
                 animate();
 
                 window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.aspect = container.clientWidth / container.clientHeight;
                     this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    this.renderer.setSize(container.clientWidth, container.clientHeight);
                 });
             }
 
-            loadDefaultData() {
-                const saved = localStorage.getItem('original_pallet_data');
+            initEvents() {
+                const container = document.getElementById('canvas-container');
+                container.addEventListener('click', (e) => {
+                    const rect = container.getBoundingClientRect();
+                    this.mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                    this.mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+                    this.raycaster.setFromCamera(this.mouse, this.camera);
+                    const hits = this.raycaster.intersectObjects(this.palletMeshes, true);
+                    if (hits.length > 0) {
+                        let obj = hits[0].object;
+                        while (obj.parent && !obj.userData.palletId) obj = obj.parent;
+                        if (obj.userData.palletId) {
+                            this.selectPallet(obj.userData.palletId);
+                        }
+                    }
+                });
+            }
+
+            loadData() {
+                const saved = localStorage.getItem('pallet_data_v2');
                 if (saved) {
                     try { this.pallets = JSON.parse(saved); } catch(e) {}
                 }
@@ -113,14 +215,15 @@
                         id: 'p-1', name: 'พาเลทที่ 1',
                         length: 1200, width: 1000, height: 1500,
                         posX: 0, posZ: 0,
-                        boxes: [{ name: 'ลังแฟ้ม', l: 400, w: 300, h: 250, qty: 8, color: '#0284c7' }]
+                        boxes: [{ id: 'b-1', name: 'ลังแฟ้ม', l: 400, w: 300, h: 250, qty: 8, color: '#0284c7' }]
                     }];
                 }
                 this.recalculateAll();
+                this.viewAllOverview();
             }
 
             saveData() {
-                localStorage.setItem('original_pallet_data', JSON.stringify(this.pallets));
+                localStorage.setItem('pallet_data_v2', JSON.stringify(this.pallets));
             }
 
             addNewPallet() {
@@ -128,9 +231,83 @@
                 this.pallets.push({
                     id, name: `พาเลทที่ ${this.pallets.length + 1}`,
                     length: 1200, width: 1000, height: 1500,
-                    posX: (this.pallets.length - 0.5) * 1400, posZ: 0,
-                    boxes: [{ name: 'ลังแฟ้ม', l: 400, w: 300, h: 250, qty: 8, color: '#f59e0b' }]
+                    posX: (this.pallets.length) * 1400, posZ: 0,
+                    boxes: [{ id: 'b-1', name: 'ลังแฟ้ม', l: 400, w: 300, h: 250, qty: 8, color: '#f59e0b' }]
                 });
+                this.recalculateAll();
+                this.selectPallet(id);
+            }
+
+            selectPallet(id) {
+                this.selectedPalletId = id;
+                const p = this.pallets.find(x => x.id === id);
+                if (!p) return;
+                document.getElementById('btn-back-overview').classList.remove('hidden');
+                document.getElementById('view-mode-indicator').textContent = `กำลังจัดการ: ${p.name}`;
+                this.updateInspectorUI(p);
+                this.switchMobileTab('inspector');
+            }
+
+            viewAllOverview() {
+                this.selectedPalletId = null;
+                document.getElementById('btn-back-overview').classList.add('hidden');
+                document.getElementById('view-mode-indicator').textContent = 'ภาพรวมพาเลท (แตะพาเลทเพื่อส่อง)';
+                this.camera.position.set(2000, 2500, 3000);
+                this.controls.target.set(0, 0, 0);
+                this.switchMobileTab('3d');
+            }
+
+            updateInspectorUI(p) {
+                document.getElementById('insp-pallet-title').textContent = p.name;
+                let total = 0; p.boxes.forEach(b => total += b.qty);
+                document.getElementById('insp-pallet-status').textContent = `${total} กล่อง`;
+                document.getElementById('active-pallet-l').value = p.length;
+                document.getElementById('active-pallet-w').value = p.width;
+                document.getElementById('active-pallet-h').value = p.height;
+
+                const container = document.getElementById('active-pallet-box-list');
+                container.innerHTML = p.boxes.map(b => `
+                    <div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-white">${b.name}</span> (${b.qty} ใบ)
+                        </div>
+                        <button onclick="app.removeBox('${p.id}', '${b.id}')" class="text-rose-400 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            }
+
+            addBoxToActivePallet() {
+                if (!this.selectedPalletId) return;
+                const p = this.pallets.find(x => x.id === this.selectedPalletId);
+                if (!p) return;
+
+                const name = document.getElementById('new-box-name').value.trim() || 'ลังแฟ้ม';
+                const l = parseInt(document.getElementById('new-box-l').value) || 400;
+                const w = parseInt(document.getElementById('new-box-w').value) || 300;
+                const h = parseInt(document.getElementById('new-box-h').value) || 250;
+                const qty = parseInt(document.getElementById('new-box-qty').value) || 8;
+                const color = document.getElementById('new-box-color').value;
+
+                p.boxes.push({ id: 'b-' + Date.now(), name, l, w, h, qty, color });
+                this.recalculateAll();
+                this.updateInspectorUI(p);
+            }
+
+            removeBox(pid, bid) {
+                const p = this.pallets.find(x => x.id === pid);
+                if (!p) return;
+                p.boxes = p.boxes.filter(b => b.id !== bid);
+                this.recalculateAll();
+                this.updateInspectorUI(p);
+            }
+
+            updateActivePalletSpec() {
+                if (!this.selectedPalletId) return;
+                const p = this.pallets.find(x => x.id === this.selectedPalletId);
+                if (!p) return;
+                p.length = parseInt(document.getElementById('active-pallet-l').value) || 1200;
+                p.width = parseInt(document.getElementById('active-pallet-w').value) || 1000;
+                p.height = parseInt(document.getElementById('active-pallet-h').value) || 1500;
                 this.recalculateAll();
             }
 
@@ -142,12 +319,16 @@
 
                 this.pallets.forEach(p => {
                     // Pallet Base
+                    const palletGroup = new THREE.Group();
+                    palletGroup.userData = { palletId: p.id };
                     const woodMat = new THREE.MeshStandardMaterial({ color: 0x854d0e });
                     const baseGeo = new THREE.BoxGeometry(p.length, 20, p.width);
                     const baseMesh = new THREE.Mesh(baseGeo, woodMat);
-                    baseMesh.position.set(p.posX, -10, p.posZ);
-                    this.scene.add(baseMesh);
-                    this.palletMeshes.push(baseMesh);
+                    baseMesh.position.y = -10;
+                    palletGroup.add(baseMesh);
+                    palletGroup.position.set(p.posX, 0, p.posZ);
+                    this.scene.add(palletGroup);
+                    this.palletMeshes.push(palletGroup);
 
                     // 4-Column Grid Stacking
                     let items = [];
@@ -177,11 +358,6 @@
                             const worldZ = p.posZ + z + item.w/2 - p.width/2;
 
                             boxMesh.position.set(worldX, worldY, worldZ);
-
-                            // Edges
-                            const edges = new THREE.LineSegments(new THREE.EdgesGeometry(boxGeo), new THREE.LineBasicMaterial({ color: 0x000000 }));
-                            boxMesh.add(edges);
-
                             this.scene.add(boxMesh);
                             this.boxMeshes.push(boxMesh);
 
@@ -190,36 +366,48 @@
                     });
                 });
 
-                this.renderListUI();
+                this.renderPalletsList();
                 this.saveData();
             }
 
-            renderListUI() {
-                document.getElementById('total-pallets').textContent = `${this.pallets.length} พาเลท`;
-                const list = document.getElementById('pallet-list');
-                list.innerHTML = this.pallets.map(p => `
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+            renderPalletsList() {
+                const container = document.getElementById('pallet-list-container');
+                container.innerHTML = this.pallets.map(p => `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                         <div>
-                            <span class="font-bold text-sky-400">${p.name}</span>
-                            <span class="text-slate-400 text-[10px] ml-2">(${p.boxes.reduce((a,b)=>a+b.qty,0)} กล่อง)</span>
+                            <div class="font-bold text-sky-400 text-sm">${p.name}</div>
+                            <div class="text-slate-400 text-[10px]">ขนาด: ${p.length}x${p.width}x${p.height} mm</div>
                         </div>
-                        <button onclick="app.removePallet('${p.id}')" class="text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="app.selectPallet('${p.id}')" class="bg-sky-600 text-white px-3 py-1.5 rounded-lg">จัดการกล่อง</button>
                     </div>
                 `).join('');
             }
 
-            removePallet(id) {
-                if (this.pallets.length <= 1) {
-                    alert('ต้องมีอย่างน้อย 1 พาเลท');
-                    return;
+            switchMobileTab(tab) {
+                ['3d', 'pallets', 'inspector'].forEach(t => {
+                    const btn = document.getElementById(`nav-btn-${t}`);
+                    if (btn) {
+                        btn.classList.remove('text-sky-400');
+                        btn.classList.add('text-slate-400');
+                    }
+                });
+                document.getElementById(`nav-btn-${tab}`).classList.add('text-sky-400');
+                document.getElementById(`nav-btn-${tab}`).classList.remove('text-slate-400');
+
+                if (tab === '3d') {
+                    document.getElementById('view-3d').classList.remove('hidden');
+                    document.getElementById('panel-content').classList.add('hidden');
+                } else {
+                    document.getElementById('view-3d').classList.add('hidden');
+                    document.getElementById('panel-content').classList.remove('hidden');
+                    document.getElementById('tab-pallets').classList.toggle('hidden', tab !== 'pallets');
+                    document.getElementById('tab-inspector').classList.toggle('hidden', tab !== 'inspector');
                 }
-                this.pallets = this.pallets.filter(p => p.id !== id);
-                this.recalculateAll();
             }
         }
 
         let app = null;
-        window.addEventListener('load', () => { app = new OriginalPalletApp(); });
+        window.addEventListener('load', () => { app = new SimplePalletApp(); });
     </script>
 </body>
 </html>
