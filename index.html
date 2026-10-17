@@ -31,68 +31,63 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
-        /* Touch friendly buttons */
         button, input, select { touch-action: manipulation; }
     </style>
 </head>
 <body class="h-full flex flex-col font-sans bg-slate-950 text-slate-100 overflow-hidden">
 
-    <!-- Top Compact Header for Mobile Portrait -->
+    <!-- Top Compact Header -->
     <header class="h-12 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between shrink-0 z-20">
         <div class="flex items-center space-x-2">
-            <div class="bg-sky-600 p-1.5 rounded-lg text-white">
+            <div class="bg-sky-600 p-1.5 rounded-lg text-white shadow-md shadow-sky-600/30">
                 <i class="fa-solid fa-boxes-packing text-sm"></i>
             </div>
             <h1 class="font-bold text-sm text-white flex items-center gap-1">
-                Pallet3D <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.2 rounded-full font-mono">PORTRAIT</span>
+                Pallet3D <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.2 rounded-full font-mono">3D TEXT</span>
             </h1>
         </div>
 
         <div class="flex items-center space-x-1.5">
-            <button id="btn-back-overview" onclick="app.viewAllOverview()" class="hidden bg-slate-800 text-sky-400 border border-sky-500/40 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
+            <button id="btn-back-overview" onclick="app.viewAllOverview()" class="hidden bg-slate-800 text-sky-400 border border-sky-500/40 px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 active:scale-95 transition-all">
                 <i class="fa-solid fa-globe"></i> ภาพรวม
             </button>
-            <button onclick="app.addNewPallet()" class="bg-sky-600 hover:bg-sky-500 text-white px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 shadow">
+            <button onclick="app.addNewPallet()" class="bg-sky-600 hover:bg-sky-500 text-white px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 shadow active:scale-95 transition-all">
                 <i class="fa-solid fa-plus"></i> เพิ่มพาเลท
             </button>
-            <button onclick="app.exportManifest()" class="bg-emerald-600 text-white p-1.5 rounded-lg text-xs">
+            <button onclick="app.exportManifest()" class="bg-emerald-600 text-white p-1.5 rounded-lg text-xs active:scale-95 transition-all">
                 <i class="fa-solid fa-file-invoice"></i>
             </button>
         </div>
     </header>
 
-    <!-- Main Content Body -->
+    <!-- Main Body Area -->
     <div class="flex-1 flex flex-col relative overflow-hidden">
 
-        <!-- 3D Viewport View -->
+        <!-- 3D Viewport -->
         <main id="view-3d" class="flex-1 relative bg-slate-950 w-full h-full">
             <div id="canvas-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
 
-            <!-- Viewport Status Overlay -->
+            <!-- Top Viewport Banner -->
             <div class="absolute top-2 left-2 right-2 pointer-events-none z-10 flex justify-center">
-                <div class="bg-slate-900/85 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-300 pointer-events-auto">
+                <div class="bg-slate-900/85 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-300 pointer-events-auto shadow-lg">
                     <span id="view-mode-indicator" class="font-bold text-sky-400 truncate">
-                        <i class="fa-solid fa-eye"></i> ภาพรวมพาเลท
+                        <i class="fa-solid fa-eye"></i> ภาพรวมพาเลท (แตะพาเลทเพื่อส่องดู)
                     </span>
                 </div>
             </div>
 
-            <!-- Step Animation Overlay Controller -->
+            <!-- Step Animation Overlay -->
             <div id="step-controller-bar" class="hidden absolute bottom-3 left-3 right-3 bg-slate-900/90 backdrop-blur border border-slate-800 p-2 rounded-xl shadow-xl z-10 flex flex-col gap-1">
                 <div class="flex items-center justify-between text-[11px] text-slate-300 px-1">
                     <span class="font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-play-circle text-sky-400"></i> ขั้นตอนการวาง
+                        <i class="fa-solid fa-play-circle text-sky-400"></i> ขั้นตอนการวางซ้อน
                     </span>
                     <span id="step-counter" class="font-mono text-sky-400 font-bold">Step 0 / 0</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="app.prevStep()" class="p-1.5 bg-slate-800 rounded text-xs active:bg-slate-700">
-                        <i class="fa-solid fa-backward-step"></i>
-                    </button>
+                    <button onclick="app.prevStep()" class="p-1.5 bg-slate-800 rounded text-xs active:bg-slate-700"><i class="fa-solid fa-backward-step"></i></button>
                     <input type="range" id="step-slider" min="0" max="0" value="0" oninput="app.setStep(parseInt(this.value))" class="flex-1 accent-sky-500 bg-slate-800 rounded h-2">
-                    <button onclick="app.nextStep()" class="p-1.5 bg-slate-800 rounded text-xs active:bg-slate-700">
-                        <i class="fa-solid fa-forward-step"></i>
-                    </button>
+                    <button onclick="app.nextStep()" class="p-1.5 bg-slate-800 rounded text-xs active:bg-slate-700"><i class="fa-solid fa-forward-step"></i></button>
                 </div>
             </div>
 
@@ -106,21 +101,21 @@
             </div>
         </main>
 
-        <!-- Tab Panel (Mobile Scrollable Control Sheets) -->
+        <!-- Control Sheet Panel -->
         <div id="panel-content" class="hidden flex-1 bg-slate-900 overflow-y-auto custom-scrollbar p-3 space-y-3">
             
             <!-- Tab 1: Pallets List -->
             <div id="tab-pallets" class="space-y-3">
-                <div class="flex justify-between items-center bg-slate-950 p-2 rounded-lg border border-slate-800">
-                    <span class="text-xs text-slate-300">เรียงตำแหน่งพาเลท:</span>
-                    <button onclick="app.autoArrangePallets()" class="text-xs text-sky-400 bg-sky-950 border border-sky-800 px-2 py-1 rounded">
+                <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-xs text-slate-300">จัดเรียงตำแหน่งพาเลท:</span>
+                    <button onclick="app.autoArrangePallets()" class="text-xs text-sky-400 bg-sky-950 border border-sky-800 px-2.5 py-1 rounded-lg">
                         <i class="fa-solid fa-grid-2"></i> เรียงตาราง
                     </button>
                 </div>
                 <div id="pallet-list-container" class="space-y-2"></div>
             </div>
 
-            <!-- Tab 2: Selected Pallet Box Inspector -->
+            <!-- Tab 2: Box Inspector & CRUD -->
             <div id="tab-inspector" class="hidden space-y-3">
                 <div id="inspector-pallet-header" class="p-2.5 bg-sky-950/50 border border-sky-800/60 rounded-xl space-y-2">
                     <div class="flex items-center justify-between">
@@ -143,12 +138,12 @@
                     </div>
                 </div>
 
-                <!-- Add New Box Form -->
+                <!-- Form Add New Box -->
                 <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
                     <div class="text-xs font-bold text-slate-200">
                         <i class="fa-solid fa-plus-circle text-sky-400"></i> เพิ่มลังแฟ้มลงพาเลทนี้
                     </div>
-                    <input type="text" id="new-box-name" placeholder="ชื่อลัง เช่น เอกสารการเงิน A1" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-white">
+                    <input type="text" id="new-box-name" placeholder="ชื่อลัง เช่น เอกสารการเงิน A1" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-sky-500">
                     
                     <div class="grid grid-cols-3 gap-1.5">
                         <div>
@@ -190,43 +185,13 @@
 
             <!-- Tab 3: Display Settings -->
             <div id="tab-settings" class="hidden space-y-3">
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                    <h3 class="text-xs font-bold text-sky-400 uppercase">โหมดการวาง</h3>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
+                    <h3 class="text-xs font-bold text-sky-400 uppercase">ตั้งค่าการแสดงผล</h3>
+                    
                     <label class="flex items-center gap-2 text-xs text-slate-300">
                         <input type="checkbox" id="opt-4-column-mode" checked onchange="app.recalculateAll()" class="w-4 h-4 rounded accent-sky-500">
                         <span>จัดเรียงแบบ 4 แถวซ้อนขึ้นไป</span>
                     </label>
-                </div>
-            </div>
-        </div>
 
-    </div>
-
-    <!-- Bottom Mobile Portrait Navigation Bar -->
-    <nav class="h-14 bg-slate-900 border-t border-slate-800 grid grid-cols-4 shrink-0 z-30">
-        <button onclick="app.switchMobileTab('3d')" id="nav-btn-3d" class="flex flex-col items-center justify-center text-sky-400">
-            <i class="fa-solid fa-cube text-base"></i>
-            <span class="text-[10px] mt-0.5 font-medium">ฉาก 3D</span>
-        </button>
-        <button onclick="app.switchMobileTab('pallets')" id="nav-btn-pallets" class="flex flex-col items-center justify-center text-slate-400">
-            <i class="fa-solid fa-pallet text-base"></i>
-            <span class="text-[10px] mt-0.5 font-medium">พาเลท</span>
-        </button>
-        <button onclick="app.switchMobileTab('inspector')" id="nav-btn-inspector" class="flex flex-col items-center justify-center text-slate-400">
-            <i class="fa-solid fa-box text-base"></i>
-            <span class="text-[10px] mt-0.5 font-medium">ลังแฟ้ม</span>
-        </button>
-        <button onclick="app.switchMobileTab('settings')" id="nav-btn-settings" class="flex flex-col items-center justify-center text-slate-400">
-            <i class="fa-solid fa-sliders text-base"></i>
-            <span class="text-[10px] mt-0.5 font-medium">ตั้งค่า</span>
-        </button>
-    </nav>
-
-    <!-- Print Report Modal -->
-    <div id="manifest-modal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur z-50 flex items-center justify-center p-3">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full max-h-[85vh] flex flex-col overflow-hidden">
-            <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-950">
-                <h2 class="text-xs font-bold text-white"><i class="fa-solid fa-file-invoice text-emerald-400"></i> รายงานการจัดวางพาเลท</h2>
-                <button onclick="app.closeManifestModal()" class="text-slate-400 text-base"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-3 overflow-y-auto space-y-3 text-xs text-slate-
+                    <label class="flex items-center gap-2 text-xs text-slate-300">
+                        <input type="checkbox" id="opt-show-box-text" checked onchange="app.toggleBoxText(this.checked)" class="w-4
