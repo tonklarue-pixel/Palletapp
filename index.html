@@ -43,7 +43,7 @@
                 <i class="fa-solid fa-boxes-packing text-sm"></i>
             </div>
             <h1 class="font-bold text-sm text-white flex items-center gap-1">
-                Pallet3D <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.2 rounded-full font-mono">3D TEXT</span>
+                Pallet3D <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.2 rounded-full font-mono">FIXED</span>
             </h1>
         </div>
 
@@ -86,112 +86,4 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="app.prevStep()" class="p-1.5 bg-slate-800 rounded text-xs active:bg-slate-700"><i class="fa-solid fa-backward-step"></i></button>
-                    <input type="range" id="step-slider" min="0" max="0" value="0" oninput="app.setStep(parseInt(this.value))" class="flex-1 accent-sky-500 bg-slate-800 rounded h-2">
-                    <button onclick="app.nextStep()" class="p-1.5 bg-slate-800 rounded text-xs active:bg-slate-700"><i class="fa-solid fa-forward-step"></i></button>
-                </div>
-            </div>
-
-            <!-- Hover Box Tooltip -->
-            <div id="inspector-tooltip" class="hidden absolute z-20 bg-slate-900/95 border border-sky-500/50 p-2 rounded-lg shadow-2xl backdrop-blur text-[11px] text-slate-200 pointer-events-none max-w-[200px]">
-                <div class="flex items-center gap-1 border-b border-slate-800 pb-1 mb-1">
-                    <span id="tooltip-color-badge" class="w-2 h-2 rounded-full bg-sky-500"></span>
-                    <span id="tooltip-title" class="font-bold text-white truncate">วัตถุ</span>
-                </div>
-                <div id="tooltip-details" class="space-y-0.5 font-mono text-[10px] text-slate-300"></div>
-            </div>
-        </main>
-
-        <!-- Control Sheet Panel -->
-        <div id="panel-content" class="hidden flex-1 bg-slate-900 overflow-y-auto custom-scrollbar p-3 space-y-3">
-            
-            <!-- Tab 1: Pallets List -->
-            <div id="tab-pallets" class="space-y-3">
-                <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <span class="text-xs text-slate-300">จัดเรียงตำแหน่งพาเลท:</span>
-                    <button onclick="app.autoArrangePallets()" class="text-xs text-sky-400 bg-sky-950 border border-sky-800 px-2.5 py-1 rounded-lg">
-                        <i class="fa-solid fa-grid-2"></i> เรียงตาราง
-                    </button>
-                </div>
-                <div id="pallet-list-container" class="space-y-2"></div>
-            </div>
-
-            <!-- Tab 2: Box Inspector & CRUD -->
-            <div id="tab-inspector" class="hidden space-y-3">
-                <div id="inspector-pallet-header" class="p-2.5 bg-sky-950/50 border border-sky-800/60 rounded-xl space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-sky-300 truncate" id="insp-pallet-title">พาเลทที่เลือก</span>
-                        <span id="insp-pallet-status" class="text-[10px] bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full font-mono">0 กล่อง</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-1.5 text-[11px]">
-                        <div>
-                            <label class="text-[10px] text-slate-400">ยาว L (mm)</label>
-                            <input type="number" id="active-pallet-l" onchange="app.updateActivePalletSpec()" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-sky-400 font-mono">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400">กว้าง W (mm)</label>
-                            <input type="number" id="active-pallet-w" onchange="app.updateActivePalletSpec()" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-sky-400 font-mono">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400">สูง H (mm)</label>
-                            <input type="number" id="active-pallet-h" onchange="app.updateActivePalletSpec()" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-sky-400 font-mono">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Form Add New Box -->
-                <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-                    <div class="text-xs font-bold text-slate-200">
-                        <i class="fa-solid fa-plus-circle text-sky-400"></i> เพิ่มลังแฟ้มลงพาเลทนี้
-                    </div>
-                    <input type="text" id="new-box-name" placeholder="ชื่อลัง เช่น เอกสารการเงิน A1" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-sky-500">
-                    
-                    <div class="grid grid-cols-3 gap-1.5">
-                        <div>
-                            <label class="text-[10px] text-slate-400">ยาว L</label>
-                            <input type="number" id="new-box-l" value="400" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400">กว้าง W</label>
-                            <input type="number" id="new-box-w" value="300" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400">สูง H</label>
-                            <input type="number" id="new-box-h" value="250" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-1.5 items-center">
-                        <div>
-                            <label class="text-[10px] text-slate-400">หนัก (kg)</label>
-                            <input type="number" id="new-box-weight" value="10" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400">จำนวน (ใบ)</label>
-                            <input type="number" id="new-box-qty" value="8" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-1 text-xs font-mono">
-                        </div>
-                        <div>
-                            <label class="text-[10px] text-slate-400">สีกล่อง</label>
-                            <input type="color" id="new-box-color" value="#0284c7" class="w-full h-7 bg-slate-800 border border-slate-700 rounded cursor-pointer p-0.5">
-                        </div>
-                    </div>
-
-                    <button onclick="app.addBoxToActivePallet()" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-2 rounded-lg text-xs font-bold transition-all active:scale-95">
-                        + เพิ่มลังเข้าพาเลท
-                    </button>
-                </div>
-
-                <div id="active-pallet-box-list" class="space-y-2"></div>
-            </div>
-
-            <!-- Tab 3: Display Settings -->
-            <div id="tab-settings" class="hidden space-y-3">
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
-                    <h3 class="text-xs font-bold text-sky-400 uppercase">ตั้งค่าการแสดงผล</h3>
-                    
-                    <label class="flex items-center gap-2 text-xs text-slate-300">
-                        <input type="checkbox" id="opt-4-column-mode" checked onchange="app.recalculateAll()" class="w-4 h-4 rounded accent-sky-500">
-                        <span>จัดเรียงแบบ 4 แถวซ้อนขึ้นไป</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 text-xs text-slate-300">
-                        <input type="checkbox" id="opt-show-box-text" checked onchange="app.toggleBoxText(this.checked)" class="w-4
+                    <input type="range" id
