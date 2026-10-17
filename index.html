@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>3D Pallet Studio Full System</title>
+    <title>3D Pallet Studio Text Labels</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -46,7 +46,7 @@
                 <i class="fa-solid fa-boxes-packing text-sm"></i>
             </div>
             <h1 class="font-bold text-sm text-white flex items-center gap-1">
-                Pallet3D <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.2 rounded-full font-mono">FULL SYSTEM</span>
+                Pallet3D <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.2 rounded-full font-mono">BOX LABELS</span>
             </h1>
         </div>
 
@@ -74,7 +74,7 @@
             <div class="absolute top-2 left-2 right-2 pointer-events-none z-10 flex justify-center">
                 <div class="bg-slate-900/85 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-300 pointer-events-auto shadow-lg">
                     <span id="view-mode-indicator" class="font-bold text-sky-400 truncate">
-                        <i class="fa-solid fa-eye"></i> ภาพรวมพาเลท (แตะพาเลทเพื่อส่องดู)
+                        <i class="fa-solid:eye fa-solid"></i> ภาพรวมพาเลท (แตะพาเลทเพื่อส่องดู)
                     </span>
                 </div>
             </div>
@@ -186,6 +186,11 @@
                         <input type="checkbox" id="opt-4-column-mode" checked onchange="app.recalculateAll()" class="w-4 h-4 rounded accent-sky-500">
                         <span>จัดเรียงแบบ 4 แถวซ้อนขึ้นไป</span>
                     </label>
+
+                    <label class="flex items-center gap-2 text-xs text-slate-300">
+                        <input type="checkbox" id="opt-show-box-text" checked onchange="app.toggleBoxText(this.checked)" class="w-4 h-4 rounded accent-sky-500">
+                        <span>แสดงชื่อเขียนไว้ข้างกล่อง 3D</span>
+                    </label>
                 </div>
             </div>
         </div>
@@ -228,7 +233,7 @@
     </div>
 
     <script>
-        class FullSystemPalletApp {
+        class LabeledPalletApp {
             constructor() {
                 this.pallets = [];
                 this.selectedPalletId = null;
@@ -240,6 +245,7 @@
 
                 this.palletMeshes = [];
                 this.boxMeshes = [];
+                this.showBoxText = true;
 
                 this.raycaster = new THREE.Raycaster();
                 this.mouse = new THREE.Vector2();
@@ -262,7 +268,7 @@
                 this.camera = new THREE.PerspectiveCamera(50, width / height, 1, 30000);
                 this.camera.position.set(2200, 2600, 3000);
 
-                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
                 this.renderer.setSize(width, height);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                 this.renderer.shadowMap.enabled = true;
@@ -330,8 +336,45 @@
                 });
             }
 
+            // สร้าง Texture เขียนชื่อลงบนกล่อง 3D
+            createBoxMaterials(bgColorHex, boxName, boxUid) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = bgColorHex;
+                ctx.fillRect(0, 0, 256, 128);
+
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.lineWidth = 6;
+                ctx.strokeRect(3, 3, 250, 122);
+
+                if (this.showBoxText) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 22px Kanit, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    let displayName = boxName;
+                    if (displayName.length > 12) displayName = displayName.substring(0, 10) + '..';
+                    
+                    ctx.fillText(displayName, 128, 48);
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.font = '600 16px JetBrains Mono, monospace';
+                    ctx.fillText(`[ ${boxUid} ]`, 128, 88);
+                }
+
+                const texture = new THREE.CanvasTexture(canvas);
+                const sideMat = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.4 });
+                const plainMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(bgColorHex), roughness: 0.5 });
+
+                return [sideMat, sideMat, plainMat, plainMat, sideMat, sideMat];
+            }
+
             loadLocalData() {
-                const saved = localStorage.getItem('pallet_full_data_v5');
+                const saved = localStorage.getItem('pallet_labeled_data_v1');
                 if (saved) {
                     try { this.pallets = JSON.parse(saved); } catch(e) {}
                 }
@@ -342,14 +385,7 @@
                             name: 'พาเลท 1 - เอกสารบัญชี',
                             length: 1200, width: 1000, height: 1600,
                             posX: -650, posZ: 0,
-                            boxes: [{ id: 'b1', name: 'ลังแฟ้มบัญชี A1', l: 400, w: 300, h: 250, weight: 10, qty: 12, color: '#0284c7' }]
-                        },
-                        {
-                            id: 'pallet-2',
-                            name: 'พาเลท 2 - แฟ้ม HR',
-                            length: 1200, width: 1000, height: 1600,
-                            posX: 650, posZ: 0,
-                            boxes: [{ id: 'b2', name: 'แฟ้มประวัติพนักงาน', l: 400, w: 300, h: 250, weight: 12, qty: 8, color: '#10b981' }]
+                            boxes: [{ id: 'b1', name: 'ลังบัญชี A1', l: 400, w: 300, h: 250, weight: 10, qty: 8, color: '#0284c7' }]
                         }
                     ];
                 }
@@ -358,7 +394,7 @@
             }
 
             saveLocalData() {
-                localStorage.setItem('pallet_full_data_v5', JSON.stringify(this.pallets));
+                localStorage.setItem('pallet_labeled_data_v1', JSON.stringify(this.pallets));
             }
 
             addNewPallet() {
@@ -411,7 +447,6 @@
                 if (!pallet) return;
 
                 document.getElementById('btn-back-overview').classList.remove('hidden');
-                document.getElementById('step-controller-bar').classList.remove('hidden');
                 document.getElementById('view-mode-indicator').innerHTML = `
                     <i class="fa-solid fa-crosshairs text-sky-400"></i> <span class="text-white font-bold ml-1">${pallet.name}</span>
                 `;
@@ -424,7 +459,6 @@
             viewAllOverview() {
                 this.selectedPalletId = null;
                 document.getElementById('btn-back-overview').classList.add('hidden');
-                document.getElementById('step-controller-bar').classList.add('hidden');
                 document.getElementById('view-mode-indicator').innerHTML = `
                     <i class="fa-solid fa-eye text-sky-400"></i> ภาพรวมพาเลท (แตะพาเลทเพื่อส่องดู)
                 `;
@@ -530,6 +564,11 @@
                 this.updateInspectorUI(pallet);
             }
 
+            toggleBoxText(show) {
+                this.showBoxText = show;
+                this.recalculateAll();
+            }
+
             recalculateAll() {
                 this.boxMeshes.forEach(m => this.scene.remove(m));
                 this.palletMeshes.forEach(m => this.scene.remove(m));
@@ -598,14 +637,11 @@
 
                     pallet.packedBoxes = packedBoxes;
 
-                    packedBoxes.forEach((box, stepIdx) => {
+                    packedBoxes.forEach((box) => {
                         const boxGeo = new THREE.BoxGeometry(box.placedL, box.h, box.placedW);
-                        const boxMat = new THREE.MeshStandardMaterial({
-                            color: new THREE.Color(box.color),
-                            roughness: 0.3
-                        });
+                        const materials = this.createBoxMaterials(box.color, box.name, box.uid);
                         
-                        const mesh = new THREE.Mesh(boxGeo, boxMat);
+                        const mesh = new THREE.Mesh(boxGeo, materials);
                         mesh.castShadow = true;
                         mesh.receiveShadow = true;
 
@@ -614,7 +650,7 @@
                         const posZ = pallet.posZ + box.z + box.placedW/2 - pallet.width/2;
 
                         mesh.position.set(posX, posY, posZ);
-                        mesh.userData = { ...box, stepIndex: stepIdx + 1 };
+                        mesh.userData = { ...box };
 
                         const edgeGeo = new THREE.EdgesGeometry(boxGeo);
                         const edgeMat = new THREE.LineBasicMaterial({ color: 0x000000 });
@@ -626,15 +662,6 @@
                 });
 
                 this.renderPalletListUI();
-
-                if (this.selectedPalletId) {
-                    const activePallet = this.pallets.find(p => p.id === this.selectedPalletId);
-                    if (activePallet && activePallet.packedBoxes) {
-                        document.getElementById('step-slider').max = activePallet.packedBoxes.length;
-                        this.setStep(activePallet.packedBoxes.length);
-                    }
-                }
-
                 this.saveLocalData();
             }
 
@@ -688,26 +715,6 @@
                 if (p) p.name = newName;
                 this.recalculateAll();
             }
-
-            setStep(step) {
-                if (!this.selectedPalletId) return;
-                this.currentStep = step;
-                document.getElementById('step-slider').value = step;
-                
-                const activePallet = this.pallets.find(p => p.id === this.selectedPalletId);
-                if (!activePallet || !activePallet.packedBoxes) return;
-
-                document.getElementById('step-counter').textContent = `Step ${step} / ${activePallet.packedBoxes.length}`;
-
-                this.boxMeshes.forEach(mesh => {
-                    if (mesh.userData.palletId === this.selectedPalletId) {
-                        mesh.visible = mesh.userData.stepIndex <= step;
-                    }
-                });
-            }
-
-            nextStep() { this.setStep(this.currentStep + 1); }
-            prevStep() { if (this.currentStep > 0) this.setStep(this.currentStep - 1); }
 
             switchMobileTab(targetTab) {
                 this.activeTab = targetTab;
@@ -789,7 +796,7 @@
         }
 
         let app = null;
-        window.addEventListener('load', () => { app = new FullSystemPalletApp(); });
+        window.addEventListener('load', () => { app = new LabeledPalletApp(); });
     </script>
 </body>
 </html>
